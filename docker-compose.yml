@@ -2,7 +2,7 @@ version: '2.3'
 
 x-lagoon-project:
   # Lagoon project name (leave `&lagoon-project` when you edit this)
-  &lagoon-project local
+  &lagoon-project $PROJECT
 
 x-volumes:
   &default-volumes
@@ -14,7 +14,7 @@ x-environment:
   &default-environment
     LAGOON_PROJECT: *lagoon-project
     # Route that should be used locally
-    LAGOON_ROUTE: http://local.docker.amazee.io
+    LAGOON_ROUTE: http://$PROJECT.docker.amazee.io
     # Uncomment if you like to have the system behave like in production
     #LAGOON_ENVIRONMENT_TYPE: production
     # Uncomment to enable xdebug and then restart via `docker-compose up -d`
@@ -54,14 +54,14 @@ services:
       - cli # basically just tells docker-compose to build the cli first
     environment:
       << : *default-environment # loads the defined environment variables from the top
-      LAGOON_LOCALDEV_URL: nginx.local.docker.amazee.io # generate another route for nginx, by default we go via varnish
+      LAGOON_LOCALDEV_URL: nginx.$PROJECT.docker.amazee.io # generate another route for nginx, by default we go via varnish
     networks:
       amazeeio-network:
       default:
       web:
         aliases:
-          - local.docker.amazee.io
-          - nginx.local.docker.amazee.io
+          - $PROJECT.docker.amazee.io
+          - nginx.$PROJECT.docker.amazee.io
 
   php:
     build:
@@ -82,12 +82,21 @@ services:
       - default
       - web
 
-  postgres:
-    image: amazeeio/postgres-drupal
+#  postgres:
+#    image: amazeeio/postgres-drupal
+#    labels:
+#      lagoon.type: postgres
+#    ports:
+#      - "5432" # exposes the port 5432 with a random local port, find it with `docker-compose port postgres 3306`
+#    environment:
+#      << : *default-environment
+
+  mariadb:
+    image: amazeeio/mariadb-drupal
     labels:
-      lagoon.type: postgres
+      lagoon.type: mariadb
     ports:
-      - "5432" # exposes the port 3306 with a random local port, find it with `docker-compose port postgres 3306`
+      - "3306" # exposes the port 3306 with a random local port, find it with `docker-compose port mariadb 3306`
     environment:
       << : *default-environment
 
